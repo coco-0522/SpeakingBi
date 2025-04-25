@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学霸教育 - 英文会话系统</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            -webkit-text-size-adjust: 100%;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        h3 {
+            color: #3498db;
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+        select, button {
+            padding: 14px 20px;
+            margin: 10px 0;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            width: 100%;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+        }
+        button {
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            min-height: 54px;
+            font-size: 17px;
+        }
+        button:hover {
+            background-color: #0066CC;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        #output, #topic, #score, #feedback, #result {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            min-height: 20px;
+            text-align: left;
+            word-break: break-word;
+            font-size: 16px;
+        }
+        #topic {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        #score {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        #status {
+            color: #FF3B30;
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 20px;
+            font-size: 15px;
+        }
+        .recording {
+            background-color: #FF3B30;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        #error {
+            color: #e74c3c;
+            margin: 10px 0;
+            min-height: 20px;
+            font-size: 15px;
+        }
+        #tips {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            border-radius: 0 8px 8px 0;
+            font-size: 15px;
+        }
+        #tips h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 1.1rem;
+        }
+        #tips ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        #tips li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .device-hint {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .cefr-details {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>学霸教育 - 英文会话系统</h2>
+        
+        <label for="difficulty">选择难度：</label>
+        <select id="difficulty">
+            <option value="easy">初级 (A1-A2)</option>
+            <option value="medium">中级 (B1-B2)</option>
+            <option value="hard">高级 (C1-C2)</option>
+        </select>
+        <button id="generateBtn">生成主题</button>
+
+        <h3>会话主题：</h3>
+        <div id="topic">（请点击按钮生成主题）</div>
+
+        <button id="recordBtn" disabled>🎤 开始录音</button>
+        <p class="device-hint" id="deviceHint"></p>
+        <button id="stopBtn" disabled>⏹ 停止录音</button>
+
+        <h3>您的回答：</h3>
+        <div id="output">（录音后会显示您的回答）</div>
+        <div id="result"></div>
+        <div id="status">准备就绪</div>
+        <div id="error"></div>
+
+        <button id="evaluateBtn" disabled>评估回答</button>
+        <h3>评估结果：</h3>
+        <div id="score">（点击评估后查看分数）</div>
+        <div id="feedback"></div>
+
+        <div id="tips">
+            <h3>💡 实用英文表达技巧</h3>
+            <p><strong>万能句式 (适用于所有话题):</strong></p>
+            <ul>
+                <li><strong>开头表达:</strong> "Well, I think that..." / "In my opinion..."</li>
+                <li><strong>过渡连接:</strong> "On the one hand... on the other hand..."</li>
+                <li><strong>举例说明:</strong> "For example..." / "A good example is..."</li>
+                <li><strong>表达不确定:</strong> "I'm not sure but..."</li>
+                <li><strong>总结陈述:</strong> "In conclusion..."</li>
+            </ul>
+            <div class="cefr-details">
+                <strong>CEFR评分标准:</strong>
+                <ul>
+                    <li><strong>A1-A2:</strong> 基础日常交流能力</li>
+                    <li><strong>B1-B2:</strong> 独立表达观点能力</li>
+                    <li><strong>C1-C2:</strong> 流利专业表达能力</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有DOM元素
+            const generateBtn = document.getElementById('generateBtn');
+            const recordBtn = document.getElementById('recordBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const evaluateBtn = document.getElementById('evaluateBtn');
+            const difficultySelect = document.getElementById('difficulty');
+            const topicDisplay = document.getElementById('topic');
+            const outputDisplay = document.getElementById('output');
+            const resultDisplay = document.getElementById('result');
+            const statusDisplay = document.getElementById('status');
+            const scoreDisplay = document.getElementById('score');
+            const feedbackDisplay = document.getElementById('feedback');
+            const errorDisplay = document.getElementById('error');
+            const deviceHint = document.getElementById('deviceHint');
+            
+            // 系统变量
+            let recognition;
+            let isRecording = false;
+            let userResponse = "";
+            let currentTopic = "";
+            let currentDifficulty = "";
+            
+            // 设备检测
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isMobile = isIOS || isAndroid;
+            const isChrome = /Chrome/.test(navigator.userAgent);
+            const isSafari = /Safari/.test(navigator.userAgent) && !isChrome;
+            
+            // 设置设备提示
+            if(isIOS) {
+                deviceHint.innerHTML = 'iPhone用户提示: <br>1. 首次使用需在弹出窗口中允许麦克风权限<br>2. 说话时靠近底部麦克风<br>3. 如果无法使用，请尝试重启Safari';
+            } else if(isAndroid) {
+                deviceHint.textContent = '安卓用户请使用Chrome浏览器，并确保已允许麦克风权限';
+            } else if(isMobile) {
+                deviceHint.textContent = '手机用户请确保已允许麦克风权限，并在安静环境中使用';
+            } else {
+                deviceHint.textContent = '电脑用户请使用Chrome/Edge浏览器，并连接麦克风';
+            }
+            
+            // 主题数据库
+            const topics = {
+                easy: [
+                    "自我介绍 (Introduce yourself)",
+                    "你的兴趣爱好 (Your hobbies)",
+                    "最喜欢的食物 (Favorite food)",
+                    "描述你的家人 (Describe your family)",
+                    "昨天做了什么 (What you did yesterday)"
+                ],
+                medium: [
+                    "一次难忘的旅行 (A memorable trip)",
+                    "如何度过周末 (How you spend weekends)",
+                    "最喜欢的电影 (Favorite movie)",
+                    "重要的全球问题 (Important global issue)",
+                    "你的理想工作 (Your ideal job)"
+                ],
+                hard: [
+                    "科技对生活的影响 (Technology's impact)",
+                    "环境保护的重要性 (Environmental protection)",
+                    "人工智能的影响 (AI's impact on society)",
+                    "全球化对文化的影响 (Globalization's effects)",
+                    "教育系统改革 (Education system reform)"
+                ]
+            };
+            
+            // CEFR评估标准
+            const cefrCriteria = {
+                A1: { min: 60, max: 70, desc: "能使用简单的短语和句子描述熟悉的话题" },
+                A2: { min: 71, max: 80, desc: "能就熟悉话题进行基本交流" },
+                B1: { min: 81, max: 87, desc: "能就熟悉话题进行连贯表达" },
+                B2: { min: 88, max: 93, desc: "能就广泛话题进行清晰详细表达" },
+                C1: { min: 94, max: 98, desc: "能流利自然地表达复杂思想" },
+                C2: { min: 99, max: 100, desc: "能精确区分细微意义差别" }
+            };
+            
+            // 检查语音识别支持
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showError("您的浏览器不支持语音识别，请使用Chrome/Edge/Safari(14+)");
+                disableAllButtons();
+                generateBtn.disabled = false;
+                return;
+            }
+            
+            // 事件监听器
+            generateBtn.addEventListener('click', generateTopic);
+            recordBtn.addEventListener('click', startRecording);
+            stopBtn.addEventListener('click', stopRecording);
+            evaluateBtn.addEventListener('click', evaluateSpeech);
+            
+            // 生成主题函数
+            function generateTopic() {
+                currentDifficulty = difficultySelect.value;
+                const topicList = topics[currentDifficulty];
+                currentTopic = topicList[Math.floor(Math.random() * topicList.length)];
+                topicDisplay.textContent = currentTopic;
+                recordBtn.disabled = false;
+                evaluateBtn.disabled = true;
+                userResponse = "";
+                outputDisplay.textContent = "（录音后会显示您的回答）";
+                resultDisplay.textContent = "";
+                statusDisplay.textContent = "准备就绪";
+                scoreDisplay.textContent = "（点击评估后查看分数）";
+                feedbackDisplay.textContent = "";
+                errorDisplay.textContent = "";
+            }
+            
+            // 开始录音函数 (跨设备兼容版)
+            function startRecording() {
+                if (!currentTopic) {
+                    showError("请先生成主题！");
+                    return;
+                }
+                
+                statusDisplay.textContent = "正在请求麦克风权限...";
+                errorDisplay.textContent = "";
+                
+                // 统一处理麦克风权限
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        // 立即停止流以防止录音冲突
+                        stream.getTracks().forEach(track => track.stop());
+                        initSpeechRecognition();
+                    })
+                    .catch(err => {
+                        let errorMsg = '麦克风不可用，请检查设备';
+                        
+                        if (err.name === 'NotAllowedError') {
+                            errorMsg = '麦克风访问被拒绝，请允许权限';
+                            if (isIOS) errorMsg += '<br>(设置 > Safari > 麦克风)';
+                            else if (isAndroid) errorMsg += '<br>(Chrome设置 > 网站设置 > 麦克风)';
+                        } else if (err.name === 'NotFoundError') {
+                            errorMsg = '找不到麦克风设备';
+                        } else if (err.name === 'NotReadableError') {
+                            errorMsg = '麦克风被其他应用占用';
+                        }
+                        
+                        showError(errorMsg);
+                        recordBtn.disabled = false;
+                    });
+            }
+            
+            // 初始化语音识别
+            function initSpeechRecognition() {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+                
+                // iOS特殊设置
+                if(isIOS) {
+                    recognition.continuous = false; // iOS必须设为false
+                } else {
+                    recognition.continuous = true; // 其他平台设为true以获得更好体验
+                }
+                
+                recognition.onstart = function() {
+                    isRecording = true;
+                    statusDisplay.textContent = "🔴 正在录音...请说话";
+                    outputDisplay.textContent = "正在聆听...";
+                    recordBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    recordBtn.classList.add("recording");
+                };
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[event.results.length - 1][0].transcript;
+                    if (transcript.trim().length > 0) {
+                        userResponse = transcript;
+                        outputDisplay.textContent = userResponse;
+                        resultDisplay.innerHTML = `<strong>识别结果：</strong>${userResponse}`;
+                        statusDisplay.textContent = "✓ 录音成功";
+                        evaluateBtn.disabled = false;
+                    }
+                };
+                
+                recognition.onerror = function(event) {
+                    handleRecognitionError(event.error);
+                };
+                
+                recognition.onend = function() {
+                    if(isRecording) {
+                        // 自动重新启动录音（非iOS设备）
+                        if(!isIOS && recognition && isRecording) {
+                            try {
+                                recognition.start();
+                            } catch(e) {
+                                stopRecording();
+                            }
+                        } else {
+                            stopRecording();
+                        }
+                    }
+                };
+                
+                try {
+                    recognition.start();
+                } catch(err) {
+                    showError("无法启动语音识别: " + err.message);
+                    stopRecording();
+                }
+            }
+            
+            // 停止录音函数
+            function stopRecording() {
+                if (isRecording && recognition) {
+                    try {
+                        recognition.stop();
+                    } catch(e) {
+                        console.log("Error stopping recognition:", e);
+                    }
+                }
+                isRecording = false;
+                recordBtn.disabled = false;
+                stopBtn.disabled = true;
+                recordBtn.classList.remove("recording");
+                
+                if(!userResponse) {
+                    statusDisplay.textContent = "⚠️ 未检测到语音，请重试";
+                }
+            }
+            
+            // 评估函数
+            function evaluateSpeech() {
+                if (!userResponse) {
+                    showError("未检测到语音，请重试");
+                    return;
+                }
+                
+                // 分析回答特征
+                const wordCount = userResponse.split(/\s+/).length;
+                const uniqueWords = new Set(userResponse.toLowerCase().match(/\b[a-z]+\b/g) || []).size;
+                const vocabRatio = uniqueWords / Math.max(1, wordCount);
+                const sentenceCount = (userResponse.match(/[.!?]+/g) || []).length;
+                const complexStructures = (userResponse.match(/because|although|however|therefore|which|that/g) || []).length;
+                
+                // 基础分数计算
+                let score = 60; // 基础分
+                score += Math.min(20, wordCount * 0.4); // 长度分
+                score += vocabRatio * 15; // 词汇多样性
+                score += complexStructures * 3; // 句子复杂度
+                
+                // 根据难度调整
+                if (currentDifficulty === "medium") score += 5;
+                if (currentDifficulty === "hard") score += 10;
+                
+                // 最终分数处理
+                score = Math.max(60, Math.min(100, Math.round(score)));
+                
+                // 确定CEFR级别
+                let cefrLevel = "";
+                for (const [level, criteria] of Object.entries(cefrCriteria)) {
+                    if (score >= criteria.min && score <= criteria.max) {
+                        cefrLevel = level;
+                        break;
+                    }
+                }
+                
+                // 显示结果
+                scoreDisplay.innerHTML = `
+                    <strong>CEFR等级:</strong> ${cefrLevel}<br>
+                    <strong>得分:</strong> ${score}/100<br>
+                    <div class="cefr-details">${cefrCriteria[cefrLevel].desc}</div>
+                `;
+                
+                // 生成反馈
+                feedbackDisplay.innerHTML = generateFeedback(cefrLevel, wordCount, vocabRatio, complexStructures);
+            }
+            
+            // 生成反馈内容
+            function generateFeedback(cefrLevel, wordCount, vocabRatio, complexStructures) {
+                let feedback = `<p><strong>${cefrCriteria[cefrLevel].desc}</strong></p>`;
+                
+                feedback += "<p><strong>详细分析:</strong></p><ul>";
+                feedback += `<li>回答长度: ${wordCount} 个单词</li>`;
+                feedback += `<li>词汇多样性: ${Math.round(vocabRatio * 100)}%</li>`;
+                feedback += `<li>复杂结构: ${complexStructures} 处</li>`;
+                feedback += `<li>难度级别: ${currentDifficulty}</li>`;
+                feedback += "</ul>";
+                
+                feedback += "<p><strong>学习建议:</strong></p><ul>";
+                
+                if (cefrLevel === "A1" || cefrLevel === "A2") {
+                    feedback += `
+                        <li>每天学习10个新单词并造句</li>
+                        <li>练习基础句型: "I like...", "My favorite... is..."</li>
+                        <li>听简单英语对话并跟读</li>
+                    `;
+                } else if (cefrLevel === "B1" || cefrLevel === "B2") {
+                    feedback += `
+                        <li>阅读适合您水平的英文文章</li>
+                        <li>练习使用连接词: however, therefore, although</li>
+                        <li>录制2分钟自我介绍并分析改进</li>
+                    `;
+                } else {
+                    feedback += `
+                        <li>观看TED演讲并模仿演讲者</li>
+                        <li>练习表达复杂观点和抽象概念</li>
+                        <li>学习同义词替换丰富表达</li>
+                    `;
+                }
+                
+                feedback += "</ul>";
+                return feedback;
+            }
+            
+            // 错误处理函数
+            function handleRecognitionError(error) {
+                const errorMap = {
+                    'no-speech': '未检测到语音，请重试',
+                    'audio-capture': '麦克风不可用，请检查设备',
+                    'not-allowed': '麦克风访问被拒绝' + (isIOS ? ' (设置 > Safari > 麦克风)' : ''),
+                    'aborted': '语音识别被中止',
+                    'network': '网络问题导致识别失败',
+                    'language-not-supported': '不支持英语识别',
+                    'service-not-allowed': '语音识别服务不可用',
+                    'bad-grammar': '语法错误',
+                    'default': '识别错误: ' + error
+                };
+                
+                const message = errorMap[error] || errorMap['default'];
+                showError(message);
+                stopRecording();
+            }
+            
+            // 显示错误信息
+            function showError(message) {
+                errorDisplay.innerHTML = "❌ " + message;
+            }
+            
+            // 禁用所有按钮
+            function disableAllButtons() {
+                generateBtn.disabled = true;
+                recordBtn.disabled = true;
+                stopBtn.disabled = true;
+                evaluateBtn.disabled = true;
+            }
+            
+            // 初始按钮状态
+            recordBtn.disabled = true;
+            stopBtn.disabled = true;
+            evaluateBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
